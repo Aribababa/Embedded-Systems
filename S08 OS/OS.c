@@ -20,7 +20,7 @@ struct Tasks{
 }; 
 
 struct Tasks procesess[MAX_TASKS];
-/* Creamos un m·ximo de 10 procesos */
+/* Creamos un m√°ximo de 10 procesos */
 
 void createTask(unsigned char task_id, unsigned char priority ,unsigned char autostart, void *(task)(void)){
 	procesess[task_id].priority = priority;
@@ -65,13 +65,14 @@ void Schedule(void){
 	}
 }
 
-void Activate_Task(unsigned char Task_id){
+volatile void Activate_Task(unsigned char Task_id){
+	
 	asm{
-		NOP
-		AIS	#1
-		TSX						; Pasamos el stack pointer al registro H:X
-		AIS	#-1
-		STHX	stack_pointer	; Cargamos en stack_pointer lo que hay en el registro H:X
+	  nop
+	  ais #2 ; Sumale un dato inmediato al Stackpointer
+	  tsx     ; Copia el Stackpointer a H:x(Parte alta  en H y baja en X)
+	  ais #-2 ; se regresa al stackpointer
+	  sthx stack_pointer
 	}
 	
 	procesess[running_task].continuePointer = *stack_pointer;
@@ -107,5 +108,3 @@ void Terminate_Task(void){
 	procesess[running_task].state = SUMMIT;
 	Schedule();
 }
-
-
