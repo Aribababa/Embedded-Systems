@@ -1,4 +1,5 @@
 #include "OS.h"
+/* #FueLaPizza */
 
 /* Estados de los Tasks */
 #define SUMMIT 0
@@ -7,7 +8,7 @@
 #define WAITING 3
 #define MAX_TASKS 5
 
-unsigned char running_task = 0;	/* Guarda la posicion del proceso que esta corriendo */
+unsigned int running_task = 0;	/* Guarda la posicion del proceso que esta corriendo */
 unsigned int **stack_pointer;		/* Guarda la direccion donde se quedo la funcion que se esta corriendo */
 unsigned int *pc_actual;
 
@@ -22,8 +23,16 @@ struct Tasks{
 struct Tasks procesess[MAX_TASKS];
 /* Creamos un máximo de 10 procesos */
 
+DeclareTask(ROOT);	
+/* Crea el proceso ROOT que corre cuando el sistema operativo no tiene nada que hacer */
+
 void createTask(unsigned char task_id, unsigned char priority ,unsigned char autostart, void *(task)(void)){
-	procesess[task_id].priority = priority;
+	
+	if(task_id == 0){
+		task_id++;
+	}
+	
+	procesess[task_id].priority = priority+1;
 	procesess[task_id].autostart = autostart;
 	procesess[task_id].state = SUMMIT;
 	procesess[task_id].initPointer = task;
@@ -31,6 +40,14 @@ void createTask(unsigned char task_id, unsigned char priority ,unsigned char aut
 
 void init_OS(void){
 	unsigned char i = 0;
+	
+	/* Creamos la Route Task */
+	procesess[0].priority = 0;
+	procesess[0].autostart = 1;
+	procesess[0].state = READY;
+	procesess[0].initPointer = &ROOT;
+	procesess[i].continuePointer = procesess[0].initPointer;
+	
 	do{
 		if(procesess[i].state == SUMMIT && procesess[i].autostart){
 			procesess[i].continuePointer = procesess[i].initPointer;
@@ -69,9 +86,9 @@ volatile void Activate_Task(unsigned char Task_id){
 	
 	asm{
 	  nop
-	  ais #2 ; Sumale un dato inmediato al Stackpointer
+	  ais #1 ; Sumale un dato inmediato al Stackpointer
 	  tsx     ; Copia el Stackpointer a H:x(Parte alta  en H y baja en X)
-	  ais #-2 ; se regresa al stackpointer
+	  ais #-1 ; se regresa al stackpointer
 	  sthx stack_pointer
 	}
 	
@@ -105,6 +122,15 @@ void Chain_Task(unsigned char Task_id){
 }
 
 void Terminate_Task(void){
-	procesess[running_task].state = SUMMIT;
+	if(running_task != 0){
+		procesess[running_task].state = SUMMIT;
+	}
 	Schedule();
+}
+
+TASK(ROOT){
+	asm{
+		NOP
+	}
+	Terminate_Task();
 }
