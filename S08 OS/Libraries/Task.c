@@ -28,7 +28,7 @@ void ActivateTask(unsigned char task_id){
 static void SaveContext(unsigned char task_id){
 	__asm ais #3;	/* Movemos el stack tres posiciones para recuperar */
 	__asm tsx;		/* Pasamos lo que hay en el Stack al regitro H:X*/
-	__asm ais #3	/* Regresamos el Stack pointer a donde estaba */
+	__asm ais #-3	/* Regresamos el Stack pointer a donde estaba */
 	__asm sthx	stackPointer;	/* Cargamos la dirección del stack a la variable en memoria */
 	task[task_id].TCB.ProgramCounter = *stackPointer;
 }
