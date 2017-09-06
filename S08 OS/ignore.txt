@@ -1,1 +1,16 @@
-We <3 Arduino
+
+
+Cada pregunta tiene un valor de 20 puntos:
+
+1.- Explica detalladamente las estructuras de datos y de código que utilizas para los servicios Activate_Task, Chain_Task y Terminate_Task
+
+2.- Explica detalladamente las estructuras de datos y de código que utilizas para el servicio de sistema operativo para interrupciones, las problemáticas encontradas y como se resolvieron
+
+3.- Explica detalladamente las estructuras de datos y de código que utilizas para el manejo de alarmnas
+
+4.- Explica detalladamente las estructuras de datos y de código que utilizas para el manejo de mailboxes
+
+5.- Explica detalladamente las estructuras de datos y código asociado para el manejo del scheduler
+
+Se debe de subir a plataforma un archivo de texto y figuras anexas realizadas en computadora o en papel vía fotografía
+
