@@ -21,5 +21,3 @@ unsigned char WaitMessage(unsigned char id_mailbox);
 	 * la Flag del semáforo esta activa, en caso constrario regresa 0. */
 
 unsigned char GetMail(unsigned char mailbox_id);
-
-
