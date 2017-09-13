@@ -11,19 +11,21 @@ unsigned char loader;
 
 void init_OS(void){
 	DisableInterrupts;
-	init_alarms();
+	init_alarms(_1ms);	/* Configuramos el perido de los Ticks del sistema */
 	do {
 		if (task[looper].State == SUSPENDED && task[looper].Autostart) {
 			task[looper].State = READY;
 		}
 	} while (++looper <= MAX_TASKS);
 	ResetLooper;
+	__asm ais #-4;	/* Evita un ¡GRAN! problema a futuro */
 	EnableInterrupts;
-	Schedule();
+	(void)Schedule();
 }
 
 extern void Schedule(void){
-	DisableInterrupts;
+	DisableInterrupts;	/* Hay que hacer esto por salud mental y estomacal */
+	ResetLooper;
 	do {	/* Buscamos el siguiente proceso a correr */
 		if (task[looper].State == READY) {
 			if (task[looper].Priority >= task[0].Priority) {
@@ -34,5 +36,16 @@ extern void Schedule(void){
 	next_task = task[running_task].TCB.ProgramCounter;
 	ResetLooper;
 	
-	RestoreContext();
+	/* Hay que verifiar si el proceso al que se va a saltar fue interrumpido o no. */
+	if(task[running_task].Interrupted){
+		task[running_task].Interrupted = 0;
+		RestoreContext_ISR();
+	} else {
+		RestoreContext();
+	}
 }
+
+
+
+
+

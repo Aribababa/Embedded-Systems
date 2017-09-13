@@ -6,13 +6,15 @@
 
 #define ResetLoopi	loopi = 0
 
-
 Alarm_t alarm[10];		/* Creamos las diez alarmas permitidas por el sistema */
 unsigned char loopi = 0;
 
-void init_alarms(void){
+void init_alarms(unsigned char miliseconds){
 	SOPT1 = 0x52;	/* Desactivamos al perro */
-	SRTISC = 0x11;	/* Causará una interrupción cada 8ms */
+	
+	MTIMSC = 0x40;
+	MTIMCLK = 0x08; 
+	MTIMMOD = miliseconds;
 }
 
 void SetAlarm(unsigned char alarm_id, unsigned char task_id, unsigned int ticks, unsigned char repetitive){
@@ -33,7 +35,8 @@ void DesactivateAlarm(unsigned char alarm_id){
 	alarm[alarm_id].State = DESACTIVATED;
 }
 
-interrupt 23 void tick(void){
+interrupt 12 void tick(void){
+	DisableInterrupts;
 	do{
 		if(alarm[loopi].State == ACTIVATED){
 			alarm[loopi].Ticks--;
@@ -48,6 +51,7 @@ interrupt 23 void tick(void){
 		}
 	} while(++loopi <= 10);
 	ResetLoopi;
-	SRTISC_RTIACK = 1;
+	(void)MTIMSC;
+	MTIMSC_TOF = 0;
+	EnableInterrupts;
 }
-

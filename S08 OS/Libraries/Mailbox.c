@@ -5,7 +5,7 @@
 
 Mailbox_t semaphore[MAILBOXES];
 
-voidCreateMailbox(unsigned char mailbox_id, unsigned char consumer_id, unsigned char producer_id){
+void CreateMailbox(unsigned char mailbox_id, unsigned char consumer_id, unsigned char producer_id){
 	semaphore[mailbox_id].Mailbox_id = mailbox_id;
 	semaphore[mailbox_id].Consumer_id = (consumer_id >= 1 && consumer_id < 10) ? consumer_id : 0x01;
 	semaphore[mailbox_id].Productor_id = (producer_id > 0 && producer_id < 10 && producer_id != consumer_id) ? producer_id : 0x02;
@@ -25,7 +25,7 @@ unsigned char GetMail(unsigned char mailbox_id){
 	if(semaphore[mailbox_id].Flag == 0x01){
 		if(semaphore[mailbox_id].Consumer_id == running_task){
 			semaphore[mailbox_id].Flag = 0x00;
-			return message;
+			return semaphore[mailbox_id].Message;
 		}
 	}
 	return 0;
