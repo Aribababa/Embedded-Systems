@@ -4,3 +4,5 @@ Real-time Operating system based in OSEK for ARM M0 or another Cortex-M Architec
 
 **Features**
   >Alarm System
+  >Mailboxes
+  >IQMath Libraries
