@@ -7,3 +7,6 @@ This project is being developed for a PSoC 4 BLE from Cypress Semiconductors.
   * Alarm system
   * Mailboxes
   * IQMath libraries
+
+## Running the tests
+Disable the optimizer from the PSoC Creator or any other IDE used to compile the OS.
