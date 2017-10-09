@@ -6,7 +6,7 @@ typedef struct{
 }   _IQ;
 
 
-_IQ IQMultiply(_IQ Muliplicando, _IQ Multiplicador);
+_IQ IQMultiply(_IQ Muliplicando, _IQ Multiplicador, unsigned char point);
 
 _IQ IQDivide(_IQ Divisor, _IQ Dividendo);
 

@@ -1,4 +1,4 @@
-#define STACK_SIZE  64
+#define STACK_SIZE  16
 #define TASK_LIMIT 10
 
 #define AUTOSTART       ('A')
@@ -12,13 +12,20 @@ typedef enum{
     TASK_STATE_SUSPENDED
 } TaskState;
 
+typedef struct{
+    unsigned int registers[8];  /* Para los registros del r0 al r7 */
+    unsigned int lr;
+} TaskControlBlock;
+
 /* Estructura que define todo lo que debe tener el proceso */
 typedef struct{
     unsigned char PID;      /* Contiene el número de proceso */
     unsigned char Priority; /* Prioridad del proceso */
     unsigned char Autostart;
     unsigned int *Stack;
-    unsigned int LinkRegister;
+    unsigned int LinkRegister;  /* Guarda el punto donde se quedo la tarea */
+    unsigned int initAddress;   /* Guarda cual es el punto inicial de la tarea */
+    TaskControlBlock TCB;
     TaskState State;
 } Task_t;
 
@@ -30,12 +37,11 @@ void CreateTask(unsigned char task_id, void (*task_function)(void), unsigned cha
 
 void ActivateTask(unsigned char task_id);
 
+void ActivateTask_ISR(unsigned char task_id);
+
 void ChainTask(unsigned char task_id);
 
 void TerminateTask(void);
 
-unsigned int __get_LR(void);
-
-void __set_LR(unsigned int LinkRegister);
 
 
