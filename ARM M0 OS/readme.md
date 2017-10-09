@@ -4,7 +4,8 @@ Real-time Operating system based in OSEK for ARM M0 or another Cortex-M Architec
 This project is being developed for a PSoC 4 BLE from Cypress Semiconductors.
 
 **Features**
-  * Task Scheduler
+  * Task Management
+  * ISR Management
   * Alarm System
   * Mailboxes
   * IQMath Libraries
