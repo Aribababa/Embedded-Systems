@@ -1,11 +1,18 @@
 #include "OS.h"
 #include "project.h"
 #include "Task.h"
+#include "Alarm.h"
 
 unsigned char looper = 0;
 
 /* Proceso que corre el OS cuando no hay nada que realizar */
 static void ROOT(void){
+    /* Generamos delay hará que se pueda interrumpir el sistema */
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
     __NOP();
     __NOP();
     __NOP();
@@ -17,32 +24,30 @@ static void ROOT(void){
 void Start_OS(void){
     CyGlobalIntDisable; 
     CreateTask(0, ROOT,0, AUTOSTART);   /* Creamos la tarea que corre por default en el sistema */
+    init_alarms(_1ms);
     do{
         if(Task[looper].Autostart == AUTOSTART){
             Task[looper].State = TASK_STATE_READY;
         }
     } while(++looper <= TASK_LIMIT);
-    looper = 0;  
-    (void)Schedule();
+    looper = 0;
+    
+    (void) Schedule();
+    
+    __asm("POP {r0-r1}");
+    __asm("MOV  R7, SP");       /* Guardamos la direccion del Stack en R7*/
+    __asm("MOV  R0, %0" : : "r" (Task[current_task].LinkRegister));
+    __asm("STR  R0, [R7, #0x04]");  /* Colocamos un valor en LR */
+    CyGlobalIntEnable;
 }
 
 void Schedule(void){
-    CyGlobalIntDisable;
     do{
-        if(Task[looper].State == TASK_STATE_READY){
-            if(Task[looper].Priority > Task[0].Priority){
+        if(Task[looper].State == TASK_STATE_READY || Task[looper].State == TASK_STATE_WAITING){
+            if(Task[looper].Priority >= 0 && Task[looper].LinkRegister != 0 ){
                 current_task = looper;    
             }
         }
     } while(++looper <= TASK_LIMIT);
     looper = 0;
-    
-    /* Preparamos el proceso para ser ejecutado */
-    Task[current_task].State = TASK_STATE_RUNNING;
-    __asm("MOV lr, %0" : : "r" (Task[current_task].LinkRegister));   /* Set LR */
-    __set_MSP((unsigned int)Task[current_task].Stack);
-    CyGlobalIntEnable;  /* Volvemos a habilitar las interrupciones */ 
-    __asm("POP {r4 - r7}      \n");
-    __asm("BX lr");
 }
-

@@ -13,55 +13,82 @@ void CreateTask(unsigned char task_id, void (*task_function)(void), unsigned cha
     Task[task_id].State = TASK_STATE_SUSPENDED;
     Task[task_id].Autostart = autostart;
     Task[task_id].LinkRegister = (unsigned int)task_function;
+    Task[task_id].initAddress = (unsigned int)task_function;
     Task[task_id].Stack = user_stacks[task_id];
 }  
 
 void ActivateTask(unsigned char task_id){
     CyGlobalIntDisable;
-    /* Colocamos en READY las tareas */
-    __asm("MOV %0, lr" : "=r" (Task[current_task].LinkRegister) ); /* Get LR */
-    __asm("PUSH {r4 - r7}       \n");
-    Task[current_task].Stack = (unsigned int*)__get_MSP();
+
+     /* Cambiamos el estado de las tareas */
     Task[task_id].State = TASK_STATE_READY;
     Task[current_task].State = TASK_STATE_READY;
-    /* Mantenemos una copia de MSP en el registro R11 */
-    (void)Schedule();
-    return;
+    
+    /* Guardamos donde se quedo la tarea */
+    __asm("MOV %0, lr" : "=r" (Task[current_task].LinkRegister));
+    
+    (void) Schedule();
+    
+       /* Pasamos a ejecutar la siguiente tarea */
+    __asm("POP {r0-r1}");
+    __asm("MOV  R7, SP");       /* Guardamos la direccion del Stack en R7*/
+    __asm("MOV  R0, %0" : : "r" (Task[current_task].LinkRegister));
+    __asm("STR  R0, [R7, #0x0C]");  /* Colocamos un valor en LR */
+    CyGlobalIntEnable;
+}
+
+void ActivateTask_ISR(unsigned char task_id){
+     CyGlobalIntDisable;
+    
+    /* Cambiamos el estado de las tareas */
+    Task[task_id].State = TASK_STATE_READY;
+    Task[current_task].State = TASK_STATE_READY;
+    
+    /* Buscamos el siguiente proceso a correr */
+    (void) Schedule();
+    
+    /* Comenzamos a guardar el Stack */
+    __asm("MOV  R7, SP");       /* Guardamos la direccion del Stack en R7*/
+    __asm("MOV  R0, %0" : : "r" (Task[current_task].LinkRegister));
+    __asm("STR  R0, [R7, #0x30]");  /* Colocamos un valor en LR */
+    CyGlobalIntEnable;
 }
 
 void ChainTask(unsigned char task_id){
     CyGlobalIntDisable;
-    __asm("MOV %0, lr" : "=r" (Task[current_task].LinkRegister) ); /* Get LR */
-    __asm("PUSH {r4 - r7}   \n");
-    Task[current_task].Stack = (unsigned int*)__get_MSP();
+    
+    /* Cambiamos el estado de las tareas */
+    Task[task_id].State = TASK_STATE_RUNNING;
     Task[current_task].State = TASK_STATE_SUSPENDED;
     
+    /* Cambiamos la tarea que está corriendo el sistema */
     current_task = task_id;
     
-    Task[task_id].State = TASK_STATE_RUNNING;
-    __asm("MOV lr, %0" : : "r" (Task[task_id].LinkRegister));   /* Set LR */
-    __set_MSP((unsigned int)Task[task_id].Stack);
+    /* Pasamos a ejecutar la siguiente tarea */
+    __asm("POP {r0-r1}");
+    __asm("MOV  R7, SP");       /* Guardamos la direccion del Stack en R7*/
+    __asm("MOV  R0, %0" : : "r" (Task[current_task].LinkRegister));
+    __asm("STR  R0, [R7, #0x0C]");  /* Colocamos un valor en LR */
     CyGlobalIntEnable;
-    __asm("POP {r4 - r7}      \n");
-    __asm("BX lr");
 }
 
 void TerminateTask(void){
     CyGlobalIntDisable;
     if(current_task){ 
         Task[current_task].State = TASK_STATE_SUSPENDED; 
-    } 
-    (void)Schedule();
-    return;
-}
-
-unsigned int __get_LR(void){
-    register unsigned int result; 
-  __asm("MOV %0, LR\n" : "=r" (result) ); 
-  return(result); 
-}
-
-void __set_LR(unsigned int LinkRegister){
-    (void)LinkRegister;
-    __asm("MOV  LR, r0");
+    }
+    
+    /* Preparamos la tarea por si es necesario llamarla otra vez */
+    Task[current_task].LinkRegister = Task[current_task].initAddress;
+    
+    /* Reiniciamos la tarea actual y buscamos la siguiente a ejecutar */
+    current_task = 0;
+    (void) Schedule();
+    
+    /* Pasamos a ejecutar la siguiente tarea */
+    __asm("POP {r0-r1}");
+    __asm("MOV  R7, SP");       /* Guardamos la direccion del Stack en R7*/
+    __asm("MOV  R0, %0" : : "r" (Task[current_task].LinkRegister));
+    __asm("STR  R0, [R7, #0x04]");  /* Colocamos un valor en LR */
+    CyGlobalIntEnable;
 }

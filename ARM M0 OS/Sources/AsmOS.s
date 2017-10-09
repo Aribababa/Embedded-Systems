@@ -1,7 +1,6 @@
-.syntax unified
 .cpu cortex-m0
-.fpu softvfp
-
+.text
+.syntax unified
 .thumb
 
 /* Configuración para que intrucciones Thumb se puedan utilizar desde C*/
