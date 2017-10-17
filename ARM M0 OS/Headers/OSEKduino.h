@@ -1,6 +1,7 @@
 #include "Task.h"
 #include "OS.h"
 #include "Alarm.h"
+#include "IQMath.h"
 
 /* Para que el usuario defina las tareas de manera más sencilla */
 #define task(X)    static void X(void)
@@ -11,8 +12,6 @@
 #define isr(X)  CY_ISR(X)
 #define Isr(X)  CY_ISR(X)
 #define ISR(X)  CY_ISR(X)
-
-/* Para las partes críticas que defina el Usuario */
 
 /* Alginas operaciones lógicas */
 #define AND &

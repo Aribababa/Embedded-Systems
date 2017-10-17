@@ -1,5 +1,5 @@
 #define STACK_SIZE  16
-#define TASK_LIMIT 10
+#define TASK_LIMIT 16
 
 #define AUTOSTART       ('A')
 #define NO_AUTOSTART    ('N')
@@ -31,7 +31,8 @@ typedef struct{
 
 extern Task_t Task[TASK_LIMIT];
 extern unsigned char current_task;
-unsigned int user_stacks[TASK_LIMIT][STACK_SIZE];
+extern unsigned int user_stacks[TASK_LIMIT][STACK_SIZE];
+extern unsigned char Interrupted;
 
 void CreateTask(unsigned char task_id, void (*task_function)(void), unsigned char priority, unsigned char autostart);
 
