@@ -18,6 +18,12 @@ void SetAlarm(unsigned char alarm_id, unsigned char task_id, unsigned int ticks,
     alarm[alarm_id].Ticks = ticks;
     alarm[alarm_id].SavedTicks = ticks;
     alarm[alarm_id].Repetitive = repetitive;
+    
+    if(ticks <= 0){
+        alarm[alarm_id].State = ALARM_STATE_DESACTIVATED;
+    } else {
+        alarm[alarm_id].State = ALARM_STATE_ACTIVATED;
+    }
 }
 
 CY_ISR(Ticker){

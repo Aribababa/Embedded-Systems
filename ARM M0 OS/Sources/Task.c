@@ -5,6 +5,7 @@
 Task_t Task[TASK_LIMIT];
 unsigned int user_stacks[TASK_LIMIT][STACK_SIZE];   
 unsigned char current_task = 0; /* Se inicia en cero para que apunte al proceso por default */
+unsigned char Interrupted = 0;
 
 void CreateTask(unsigned char task_id, void (*task_function)(void), unsigned char priority, unsigned char autostart){
     /* Colocamos la información general del proceso */
@@ -27,6 +28,7 @@ void ActivateTask(unsigned char task_id){
     /* Guardamos donde se quedo la tarea */
     __asm("MOV %0, lr" : "=r" (Task[current_task].LinkRegister));
     
+    /* Buscamos el siguiente proceso a ejecutar */
     (void) Schedule();
     
        /* Pasamos a ejecutar la siguiente tarea */
@@ -44,14 +46,10 @@ void ActivateTask_ISR(unsigned char task_id){
     Task[task_id].State = TASK_STATE_READY;
     Task[current_task].State = TASK_STATE_READY;
     
-    /* Buscamos el siguiente proceso a correr */
-    (void) Schedule();
-    
     /* Comenzamos a guardar el Stack */
     __asm("MOV  R7, SP");       /* Guardamos la direccion del Stack en R7*/
-    __asm("MOV  R0, %0" : : "r" (Task[current_task].LinkRegister));
+    __asm("MOV  R0, %0" : : "r" (Reschedule));
     __asm("STR  R0, [R7, #0x30]");  /* Colocamos un valor en LR */
-    CyGlobalIntEnable;
 }
 
 void ChainTask(unsigned char task_id){
@@ -63,6 +61,7 @@ void ChainTask(unsigned char task_id){
     
     /* Cambiamos la tarea que está corriendo el sistema */
     current_task = task_id;
+   
     
     /* Pasamos a ejecutar la siguiente tarea */
     __asm("POP {r0-r1}");
@@ -79,7 +78,7 @@ void TerminateTask(void){
     }
     
     /* Preparamos la tarea por si es necesario llamarla otra vez */
-    Task[current_task].LinkRegister = Task[current_task].initAddress;
+    //Task[current_task].LinkRegister = Task[current_task].initAddress;
     
     /* Reiniciamos la tarea actual y buscamos la siguiente a ejecutar */
     current_task = 0;
