@@ -21,7 +21,7 @@ int main(void){
 	CreateTask(4, 3 , TASK_AUTOSTART, &TASK_D);
 
 	/* Comienza a ejecutar ele sistema operativo */
-	(void)os_start();
+	while(!os_start());
 
 	for(;;);
 }
