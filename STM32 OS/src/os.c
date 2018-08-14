@@ -23,10 +23,15 @@ unsigned char os_start(void){
 		return 0;
 	}
 
-	/* Acomodamos los procesos por orden de prioridad,  por lo que habrá que hacer un
+	/* Acomodamos los procesos por orden de prioridad,  por lo que habrÃ¡ que hacer un
 	  algoritmo de acomodo */
 	OrderByPriority(m_task_table.tasks ,m_task_table.size);
-	os_curr_task = &m_task_table.tasks[0]; /* La primera en el arreglo es la de mayor prioridad */
+	while(1){
+		if(m_task_table.tasks[m_task_table.current_task].status == OS_TASK_STATUS_READY){
+			break;
+		}
+		m_task_table.current_task = (m_task_table.current_task+1)%m_task_table.size;
+	}
 
 	__set_PSP(os_curr_task->sp+STACK_SIZE); /* Set PSP to the top of task's stack */
 	__set_CONTROL(0x03); 			/* Cambiamos al modo de Process Stack Pointer( PSP) no privilegiado  */
@@ -60,7 +65,7 @@ void SysTick_Handler(void){
 	SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
-/* Acomoda los procesos por orden de prioridad. Para evitar problemas con la búsqueda
+/* Acomoda los procesos por orden de prioridad. Para evitar problemas con la bÃºsqueda
  * de procesos durante la ejecucion */
 static void OrderByPriority(task_t arr[], uint8_t n){
 	uint8_t i, j, swapped;
