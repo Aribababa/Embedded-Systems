@@ -13,6 +13,10 @@ unsigned char os_start(void){
 	RCC_ClocksTypeDef RCC_Clocks;
 	RCC_GetClocksFreq (&RCC_Clocks);
 
+	if(!m_task_table.size){
+		return 0;
+	}
+
 	/* Configuramos las interrrupciones del sistema */
 	NVIC_SetPriority(PendSV_IRQn, 0xFF); 	/* Menor prioridad posible */
 	NVIC_SetPriority(SysTick_IRQn, 0x00); 	/* Mayor prioridad posible */
@@ -26,12 +30,16 @@ unsigned char os_start(void){
 	/* Acomodamos los procesos por orden de prioridad,  por lo que habrá que hacer un
 	  algoritmo de acomodo */
 	OrderByPriority(m_task_table.tasks ,m_task_table.size);
+
+	/* Buscamso el primer proceso en ejecutarse. Si no hay ninguno dispoible se quedará en el loop
+	 * hasta que uno entre en el estado de READY */
 	while(1){
 		if(m_task_table.tasks[m_task_table.current_task].status == OS_TASK_STATUS_READY){
 			break;
 		}
 		m_task_table.current_task = (m_task_table.current_task+1)%m_task_table.size;
 	}
+	os_curr_task = &m_task_table.tasks[m_task_table.current_task];
 
 	__set_PSP(os_curr_task->sp+STACK_SIZE); /* Set PSP to the top of task's stack */
 	__set_CONTROL(0x03); 			/* Cambiamos al modo de Process Stack Pointer( PSP) no privilegiado  */
@@ -88,3 +96,4 @@ static void swap(task_t *xp, task_t *yp){
 	*xp = *yp;
 	*yp = temp;
 }
+
